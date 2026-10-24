@@ -19,6 +19,20 @@ bool Workspace::resolve(std::string_view user_path, fs::path* out,
         *reason = "null character in path";
         return false;
     }
-    *reason = "Workspace::resolve not implemented yet";   // TODO
-    return false;
+    std::filesystem::path p{std::string(user_path)};
+    if (p.is_absolute() || p.has_root_path()) {
+        *reason = "path is not relative (contains root)";
+        return false;
+    }
+    std::filesystem::path n = p.lexically_normal();
+    if (*n.begin() == "..") {
+        *reason = "relative path attempted escape from workspace directory";
+        return false;
+    }
+    if (n == ".") {
+        *out = root();
+    } else {
+        *out = root() / n;
+    }
+    return true;
 }

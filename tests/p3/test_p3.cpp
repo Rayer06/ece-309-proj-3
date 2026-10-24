@@ -104,4 +104,63 @@ TEST(calc_division_by_zero) {
 //   ws_<case>                     REQUIRED: every row of the table in spec §4.4
 //   calc_<case>                   left-to-right, parentheses, negatives
 
+TEST(ws_acceptable_paths) {
+    TempDir d;
+    Workspace ws(d.path());
+    fs::path out;
+    std::string reason;
+    REQUIRE(ws.resolve("./notes//todo.txt", &out, &reason));
+    CHECK(out == ws.root() / "notes" / "todo.txt");
+    CHECK(ws.resolve(".", &out, &reason));
+    CHECK(out == ws.root());
+    CHECK(ws.resolve("a/../b", &out, &reason));
+    CHECK(out == ws.root() / "b");
+    CHECK(ws.resolve("a/..", &out, &reason));
+    CHECK(out == ws.root());
+    CHECK(ws.resolve("new/dir/file.txt", &out, &reason));
+    CHECK(out == ws.root() / "new" / "dir" / "file.txt");
+    CHECK(ws.resolve("my..notes.txt", &out, &reason));
+    CHECK(out == ws.root() / "my..notes.txt");
+}
+
+TEST(ws_rejects_empty_string) {
+    TempDir d;
+    Workspace ws(d.path());
+    fs::path out;
+    std::string reason;
+    REQUIRE(!ws.resolve("", &out, &reason));
+    CHECK(!reason.empty());
+}
+
+TEST(ws_rejects_null) {
+    TempDir d;
+    Workspace ws(d.path());
+    fs::path out;
+    std::string reason;
+    REQUIRE(!ws.resolve(std::string("notes") + '\0' + "/x", &out, &reason));
+    CHECK(!reason.empty());
+}
+
+TEST(ws_rejects_absolute_non_ws_path) {
+    TempDir d;
+    Workspace ws(d.path());
+    fs::path out;
+    std::string reason;
+    REQUIRE(!ws.resolve("/etc/passwd", &out, &reason));
+    CHECK(!reason.empty());
+}
+
+TEST(ws_rejects_additional_excaping_paths) {
+    TempDir d;
+    Workspace ws(d.path());
+    fs::path out;
+    std::string reason;
+    REQUIRE(!ws.resolve("..", &out, &reason));
+    CHECK(!reason.empty());
+    CHECK(!ws.resolve("a/../../b", &out, &reason));
+    CHECK(!reason.empty());
+    CHECK(!ws.resolve("notes/../../ws/notes/todo.txt", &out, &reason));
+    CHECK(!reason.empty());
+}
+
 int main(int argc, char** argv) { return mt::run_all(argc, argv); }

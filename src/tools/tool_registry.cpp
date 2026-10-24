@@ -32,6 +32,7 @@ bool ToolRegistry::add(std::unique_ptr<Tool> tool) {
         tool.release();
         return false;
     }
+    return true;
 
 
     // TODO
