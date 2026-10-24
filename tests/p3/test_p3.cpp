@@ -163,4 +163,28 @@ TEST(ws_rejects_additional_excaping_paths) {
     CHECK(!reason.empty());
 }
 
+TEST(calc_various_expressions) {
+    double v = 0;
+    std::string err;
+    REQUIRE(eval("10 - 4 - 3", &v, &err));
+    CHECK(v == 3);
+    REQUIRE(eval("100 / 10 / 5", &v, &err));
+    CHECK(v == 2);
+    REQUIRE(eval("(2 + 3) * 4", &v, &err));
+    CHECK(v == 20);
+    REQUIRE(eval("2 * (3 + 4) - 5", &v, &err));
+    CHECK(v == 9);
+    REQUIRE(eval("-3 * -3", &v, &err));
+    CHECK(v == 9);
+    REQUIRE(eval("7 / 2", &v, &err));
+    CHECK(v == 3.5);
+    REQUIRE(!eval("1 / (2 - 2)", &v, &err));
+    CHECK(err == "division by zero");
+    REQUIRE(eval("4 * (2 * 3)", &v, &err));
+    CHECK(v == 24);
+    REQUIRE(eval("1 + 2 - 3", &v, &err));
+    CHECK(v == 0);
+}
+
+
 int main(int argc, char** argv) { return mt::run_all(argc, argv); }
