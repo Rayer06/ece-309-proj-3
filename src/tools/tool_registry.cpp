@@ -86,7 +86,6 @@ void ToolRegistry::for_each(const std::function<void(const Tool&)>& fn) const {
             fn(*t);
         }
     }
-    // TODO
 }
 
 std::size_t ToolRegistry::bucket_count() const noexcept {

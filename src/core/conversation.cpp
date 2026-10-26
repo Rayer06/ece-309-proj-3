@@ -79,7 +79,7 @@ Conversation& Conversation::operator=(Conversation&& other) noexcept {
 void Conversation::append(Message m) {
     std::size_t newCapacity = capacity_ * 2;
     // if no array (just initialized), create it
-    if (size_ == 0) {
+    if (capacity_ == 0) {
         data_ = new Message[1];
         capacity_ = 1;
     }
@@ -116,7 +116,7 @@ const Message* Conversation::begin() const noexcept{
     if (size_ == 0) {
         return nullptr;
     }
-    return &data_[0];
+    return data_;
 }
 
 // newest message
@@ -124,5 +124,5 @@ const Message* Conversation::end() const noexcept {
     if (size_ == 0) {
         return nullptr;
     }
-    return &data_[size_];
+    return data_ + size_;
 }

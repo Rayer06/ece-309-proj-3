@@ -7,7 +7,7 @@
 #include "tools/calculator.h"
 #include <stack>
 
-int precedence(CalcToken::Kind const op) {
+static int precedence(CalcToken::Kind const op) {
     if (op == CalcToken::Kind::Times) {return 2;}
     if (op == CalcToken::Kind::Divide) {return 2;}
     if (op == CalcToken::Kind::Plus) {return 1;}
@@ -15,7 +15,7 @@ int precedence(CalcToken::Kind const op) {
     return 0;
 }
 
-int apply_op(std::stack<double>& values, std::stack<CalcToken::Kind>& ops) {
+static int apply_op(std::stack<double>& values, std::stack<CalcToken::Kind>& ops) {
     CalcToken::Kind op = ops.top(); ops.pop();
     double rhs = values.top(); values.pop();
     double lhs = values.top(); values.pop();
