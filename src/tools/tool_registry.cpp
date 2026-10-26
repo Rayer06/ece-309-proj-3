@@ -32,7 +32,6 @@ std::size_t ToolRegistry::hash(std::string_view key) noexcept {
 // Registers a tool. If the tool already exists, keeps the original tool and destroys
 // the new one
 bool ToolRegistry::add(std::unique_ptr<Tool> tool) {
-    size_t index = hash(tool->name()) & (bucket_count()-1);
     if (!tool) { // null tool
         return false;
     }
@@ -47,15 +46,21 @@ bool ToolRegistry::add(std::unique_ptr<Tool> tool) {
             newTable[i] = std::move(chain);
         }
         for (size_t i = 0; i < numBuckets_; i++) {
-            for (size_t j = 0; j < table_[index]->size(); j++) {
+            for (auto & j : *table_[i]) {
+                Tool* t = j.get();
+                size_t newIndex = hash(t->name()) & (2*numBuckets_-1);
+                newTable[newIndex]->push_back(std::move(j));
+            }
+            /*for (size_t j = 0; j < table_[index]->size(); j++) {
                 Tool* t = table_[index]->at(j).get();
                 size_t newIndex = hash(t->name());
                 newTable[newIndex]->push_back(std::move(table_[index]->at(j)));
-            }
+            }*/
         }
         table_ = std::move(newTable);
         numBuckets_ *= 2;
     }
+    size_t index = hash(tool->name()) & (bucket_count()-1);
     table_[index]->push_back(std::move(tool));
     size_++;
     return true;

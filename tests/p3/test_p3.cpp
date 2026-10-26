@@ -17,6 +17,7 @@
 #include "tools/workspace.h"
 
 #include <cstdio>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -103,6 +104,85 @@ TEST(calc_division_by_zero) {
 //   reg_alternative_hash          REQUIRED: longest chain of a weak hash
 //   ws_<case>                     REQUIRED: every row of the table in spec §4.4
 //   calc_<case>                   left-to-right, parentheses, negatives
+
+TEST(reg_null_rejected) {
+    ToolRegistry r;
+    REQUIRE(!r.add(nullptr));
+    CHECK(r.size() == 0);
+}
+
+TEST(reg_find_empty) {
+    ToolRegistry r;
+    auto t = std::make_unique<NamedTool>("tool_1");
+    REQUIRE(r.add(std::move(t)));
+    REQUIRE(!r.find("tool_0"));
+    CHECK(r.size() == 1);
+}
+
+TEST(reg_for_each_visits_each_once) {
+    ToolRegistry r;
+    r.add(std::make_unique<NamedTool>("tool_1"));
+    r.add(std::make_unique<NamedTool>("tool_2"));
+    r.add(std::make_unique<NamedTool>("tool_3"));
+    r.add(std::make_unique<NamedTool>("tool_4"));
+    r.add(std::make_unique<NamedTool>("tool_5"));
+
+    int count = 0;
+    r.for_each([&](const Tool&) {
+        ++count;
+    });
+    REQUIRE(count == 5);
+    CHECK(r.size() == 5);
+}
+
+TEST(reg_10000_tools) {
+    ToolRegistry r;
+    Tool* first = nullptr;
+    for (int i = 1; i <= 10000; i++) {
+        std::string name = "tool_" + std::to_string(i);
+        auto t = std::make_unique<NamedTool>(name);
+        if (i == 1) {
+            first = t.get();
+        }
+        r.add(std::move(t));
+        REQUIRE(r.load_factor() <= 1.0);
+    }
+    for (int i = 1; i <= 10000; i++) {
+        REQUIRE(r.find("tool_" + std::to_string(i)));
+    }
+    std::cout << "Bucket count: " << r.bucket_count() << std::endl;
+    std::cout << "Load factor: " << r.load_factor() << std::endl;
+    std::cout << "Max probe length: " << r.max_probe_length() << std::endl;
+    REQUIRE(r.find("tool_1") == first);
+    REQUIRE(r.max_probe_length() <= 64);
+
+}
+
+TEST(reg_alternative_hash) {
+    ToolRegistry r;
+    std::vector<int> weak_hash_count;
+    int max_chain = 0;
+    for (int i = 1; i <= 10000; i++) {
+        std::string name = "tool_" + std::to_string(i);
+        auto t = std::make_unique<NamedTool>(name);
+        r.add(std::move(t));
+    }
+    for (size_t i = 0; i < r.bucket_count(); i++) {
+        weak_hash_count.push_back(0);
+    }
+    for (int i = 1; i <= 10000; i++) {
+        std::string s = "tool_" + std::to_string(i);
+        unsigned int weak_hash = s[0] + s.size();
+        size_t index = weak_hash & (r.bucket_count()-1);
+        weak_hash_count[index]++;
+    }
+    for (size_t i = 0; i < r.bucket_count(); i++) {
+        if (weak_hash_count[i] > max_chain) {
+            max_chain = weak_hash_count[i];
+        }
+    }
+    std::cout << "Max chain for weak hash: " << max_chain << std::endl;
+}
 
 TEST(ws_acceptable_paths) {
     TempDir d;
