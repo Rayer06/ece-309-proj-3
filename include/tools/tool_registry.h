@@ -73,5 +73,6 @@ private:
     std::size_t numBuckets_;
     std::size_t size_;
     // a vector of vectors of Tool unique pointers (uses Chaining)
-    std::vector<std::vector<std::unique_ptr<Tool>>> table_;
+    std::unique_ptr<std::unique_ptr<std::vector<std::unique_ptr<Tool>>>[]> table_;
+    //std::vector<std::vector<std::unique_ptr<Tool>>> table_;
 };
