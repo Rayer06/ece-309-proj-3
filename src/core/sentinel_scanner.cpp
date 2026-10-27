@@ -1,8 +1,5 @@
 #include "core/sentinel_scanner.h"
-
 #include <string>
-//using namespace std;
-
 
 SentinelScanner::SentinelScanner(std::string sentinel) {
     sentinel_ = sentinel;
@@ -29,12 +26,6 @@ SentinelScanner::Out SentinelScanner::feed(std::string_view chunk) {
 
     std::size_t search_start = std::max<signed long>(static_cast<signed long>(tmp.size()) - static_cast<signed long>(sentinel_.size()), 0);
 
-    // traverse pending_ + chunk string until start of sentinel found, then
-    // put remaining characters into sentinel_so_far_
-
-    // search for all
-
-
     // new logic:
     // search string for "<", "<|", "<|e", etc in sequence
     // if no sequence returns match, all text is safe text
@@ -45,8 +36,8 @@ SentinelScanner::Out SentinelScanner::feed(std::string_view chunk) {
     // if last matched iteration does not hit end of string, sentinel not found,
     // all text is safe text
 
-    for (i = search_start; i < sentinel_.size(); i++) {
-        if (tmp.find(sentinel_.substr(0, i+1)) != std::string::npos) {
+    for (i = 0; i < sentinel_.size(); i++) {
+        if (tmp.find(sentinel_.substr(0, i+1), search_start) != std::string::npos) {
             where_match = tmp.find(sentinel_.substr(0, i+1));
             sentinel_start = true;
             last_match = i;
